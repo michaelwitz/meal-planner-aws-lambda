@@ -32,8 +32,8 @@ This project supports three database configurations:
 
 - Python 3.11.x (required)
 - Docker & Docker Compose (for local PostgreSQL)
-- AWS CLI configured
-- [uv](https://github.com/astral-sh/uv) for fast package management
+- AWS CLI configured (for cloud deployment)
+- [uv](https://github.com/astral-sh/uv) for Python package management
 
 ### Setup
 
@@ -42,11 +42,15 @@ This project supports three database configurations:
 git clone <repo-url>
 cd meal-planner-aws-lambda
 
-# Setup Python environment
-uv venv --python 3.11
+# Install uv if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# Or with Homebrew: brew install uv
+
+# Setup Python environment with uv
+uv venv
 source .venv/bin/activate
 
-# Install dependencies
+# Install dependencies with uv
 uv pip install -r backend/requirements.txt
 ```
 
@@ -66,7 +70,7 @@ docker-compose up -d
 # Initialize database
 cd backend
 export USE_LOCAL_DB=true
-python scripts/rebuild_db.py --local
+python scripts/rebuild_db.py
 ```
 
 **Option B: Cloud RDS Serverless**
@@ -81,8 +85,12 @@ python scripts/rebuild_db.py
 4. **Run the application:**
 ```bash
 cd backend
+./start-dev-server.sh
+# Or manually:
+export USE_LOCAL_DB=true
 python -m app
-# API available at http://localhost:5000
+# API available at http://localhost:5050
+# Note: Port 5050 avoids conflict with macOS AirPlay
 ```
 
 ## Database Connection Architecture
@@ -129,8 +137,9 @@ aws ec2 authorize-security-group-ingress \
   --cidr ${MY_IP}/32
 
 # Run locally against cloud database
-export USE_LOCAL_DB=false
 cd backend
+source ../.venv/bin/activate
+export USE_LOCAL_DB=false
 python -m app
 ```
 

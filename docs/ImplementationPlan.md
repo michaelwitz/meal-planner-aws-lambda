@@ -22,6 +22,25 @@ Building a cloud-native meal planner application using AWS Lambda, Serverless Fr
 - **Authentication**: JWT (PyJWT or flask-jwt-extended)
 - **Password Hashing**: bcrypt
 
+## Implementation Phases
+
+### Phase 1A: Local Development with Docker PostgreSQL
+1. Copy code from meal-planner-docker
+2. Set up Flask application locally
+3. Test with Docker PostgreSQL on port 5455
+4. Verify all authentication endpoints work
+
+### Phase 1B: Cloud RDS Testing from Local
+1. Create AWS infrastructure (RDS Serverless, Security Groups)
+2. Test local Flask app connecting to cloud RDS
+3. Verify authentication works with cloud database
+
+### Phase 1C: Lambda Deployment
+1. Add Lambda handlers
+2. Configure RDS Proxy
+3. Deploy with Serverless Framework
+4. Test authentication via API Gateway
+
 ## Phase 1: Infrastructure Setup and Authentication
 
 ### Step 1: AWS Infrastructure Setup

@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD}
       POSTGRES_DB: ${LOCAL_DB_NAME}
     ports:
-      - "${LOCAL_DB_PORT}:5432"
+      - "${LOCAL_DB_PORT:-5455}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
