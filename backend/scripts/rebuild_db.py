@@ -634,7 +634,12 @@ def rebuild_database(target=None):
         print(f"Using {target} database: {TestDatabaseConfig.get_config(target).description}")
         db_info = f"Database: {target} test database"
     else:
-        db_info = "Database: development database (port 5455)"
+        # Determine which database based on USE_LOCAL_DB
+        use_local = os.environ.get('USE_LOCAL_DB', 'true').lower() == 'true'
+        if use_local:
+            db_info = "Database: local development database (port 5455)"
+        else:
+            db_info = "Database: cloud RDS Serverless database"
     
     # Import app modules after setting DATABASE_URL
     from app import create_app
