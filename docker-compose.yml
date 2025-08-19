@@ -1,0 +1,54 @@
+# Docker Compose for Local PostgreSQL Development
+# Reads configuration from .env file
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15.4-alpine
+    container_name: meal-planner-local-db
+    environment:
+      POSTGRES_USER: ${LOCAL_DB_USER}
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD}
+      POSTGRES_DB: ${LOCAL_DB_NAME}
+    ports:
+      - "${LOCAL_DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LOCAL_DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - meal-planner-network
+
+  # Optional: pgAdmin for database management
+  # Uncomment if you want a web-based PostgreSQL admin interface
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: meal-planner-pgadmin
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@mealplanner.local
+  #     PGADMIN_DEFAULT_PASSWORD: ${LOCAL_DB_PASSWORD}
+  #     PGADMIN_CONFIG_SERVER_MODE: 'False'
+  #     PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - meal-planner-network
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+    name: meal-planner-postgres-data
+  # pgadmin_data:
+  #   name: meal-planner-pgadmin-data
+
+networks:
+  meal-planner-network:
+    name: meal-planner-network
+    driver: bridge
