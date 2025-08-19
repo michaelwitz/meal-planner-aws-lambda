@@ -3,15 +3,17 @@
 ## Overview
 Building a cloud-native meal planner application using AWS Lambda, Serverless Framework, and RDS PostgreSQL. This plan focuses on Phase 1: Infrastructure Setup and Authentication, with support for local development.
 
-## Architecture Components
+### Architecture Components
 
 ### AWS Infrastructure
-- **VPC**: Default VPC for simplicity (custom VPC optional)
-- **RDS Serverless v2 PostgreSQL**: Auto-scaling database (0.5-2 ACU)
+- **VPC**: Default VPC for simplicity
+- **RDS Serverless v2 PostgreSQL**: Auto-scaling database (0-1 ACU with auto-pause)
 - **Lambda Functions**: Serverless compute for API endpoints
 - **API Gateway**: REST API management
 - **Secrets Manager**: Store database credentials and JWT secrets
 - **Security Groups**: Control network access
+
+**For detailed Lambda-RDS connection architecture, see: [Lambda-RDS-Connection.md](./Lambda-RDS-Connection.md)**
 
 ### Application Stack
 - **Framework**: Serverless Framework for deployment
@@ -176,7 +178,11 @@ echo "FLASK_SECRET_KEY=$FLASK_SECRET" >> .env
 
 #### 1.5 Create RDS Serverless v2 PostgreSQL Cluster
 
-**Note**: We'll set up RDS Proxy after the cluster is created (see step 1.6) for better Lambda connection management.
+**See automated scripts:**
+- [setup-networking.sh](../scripts/setup-networking.sh) - Sets up VPC and security groups
+- [setup-rds-serverless.sh](../scripts/setup-rds-serverless.sh) - Creates RDS cluster
+- [RDS-Setup.md](./RDS-Setup.md) - Complete RDS setup guide
+
 ```bash
 # Create Aurora Serverless v2 cluster
 aws rds create-db-cluster \
@@ -321,8 +327,15 @@ cp ../meal-planner-docker/backend/app/schemas/user_schemas.py backend/app/schema
 cp ../meal-planner-docker/backend/scripts/rebuild_db.py backend/scripts/
 ```
 
-#### 2.2 Create Database Connection Module with RDS Proxy Support
-Create `backend/app/models/database.py`:
+#### 2.2 Database Connection Module
+
+**See: [backend/app/database/connection.py](../backend/app/database/connection.py)**
+
+This module handles:
+- Lambda-optimized connections (NullPool)
+- RDS Serverless v2 wake-up retries
+- Credentials from environment or Secrets Manager
+
 ```python
 """Database configuration for Lambda (via RDS Proxy) and local development."""
 
@@ -721,6 +734,8 @@ curl -X POST http://localhost:5000/api/auth/login \
 
 ### Step 5: Lambda Deployment (After Local Testing)
 
+**For complete Lambda deployment guide, see: [Lambda-RDS-Connection.md](./Lambda-RDS-Connection.md#deployment-process)**
+
 #### 5.1 Create Serverless Configuration
 Create `serverless.yml`:
 ```yaml
@@ -821,11 +836,14 @@ aws ec2 authorize-security-group-ingress \
 
 ## Cost Estimates
 
-- **RDS db.t3.micro**: ~$15/month (free tier eligible first year)
+**With RDS Serverless v2 (0-1 ACU, auto-pause):**
+- **RDS Serverless v2**: ~$1-2/month when mostly paused (storage only)
 - **Lambda**: < $1/month for development
 - **Secrets Manager**: $0.40/secret/month = $1.20/month
 - **API Gateway**: < $1/month for development
-- **Total**: ~$18/month (or ~$3/month if RDS is free tier)
+- **Total**: ~$5/month for light development use
+
+**See [Lambda-RDS-Connection.md](./Lambda-RDS-Connection.md#cost-considerations) for detailed cost breakdown**
 
 ## Next Steps
 

@@ -1,0 +1,46 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "apigateway:*",
+                "cloudformation:*",
+                "cloudwatch:*",
+                "ec2:Describe*",
+                "ec2:CreateSecurityGroup",
+                "ec2:DeleteSecurityGroup",
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:AuthorizeSecurityGroupEgress",
+                "ec2:RevokeSecurityGroupIngress",
+                "ec2:RevokeSecurityGroupEgress",
+                "ec2:ModifySecurityGroupRules",
+                "ec2:UpdateSecurityGroupRuleDescriptionsIngress",
+                "ec2:UpdateSecurityGroupRuleDescriptionsEgress",
+                "ec2:CreateTags",
+                "ec2:DeleteTags",
+                "ec2:CreateDefaultVpc",
+                "iam:List*",
+                "iam:Get*",
+                "iam:CreatePolicy",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:DeletePolicy",
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:PassRole",
+                "lambda:*",
+                "logs:*",
+                "s3:*",
+                "sns:*",
+                "sqs:*",
+                "events:*",
+                "ssm:*",
+                "secretsmanager:*",
+                "route53:*",
+                "rds:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
