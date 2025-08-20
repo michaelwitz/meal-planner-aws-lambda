@@ -34,6 +34,7 @@ This project supports three database configurations:
 - Docker & Docker Compose (for local PostgreSQL)
 - AWS CLI configured (for cloud deployment)
 - [uv](https://github.com/astral-sh/uv) for Python package management
+- Serverless Framework v3.40.0 - [See setup guide](docs/Serverless-Setup.md)
 
 ### Setup
 
@@ -51,7 +52,7 @@ uv venv
 source .venv/bin/activate
 
 # Install dependencies with uv
-uv pip install -r backend/requirements.txt
+uv pip install -r backend/app/requirements.txt
 ```
 
 2. **Configure environment:**
@@ -152,11 +153,27 @@ This allows you to:
 ## Documentation
 
 - [Implementation Plan](docs/ImplementationPlan.md) - Detailed AWS setup instructions
+- [Serverless Setup](docs/Serverless-Setup.md) - Serverless Framework v3 installation and configuration
+- [Lambda-RDS Connection](docs/Lambda-RDS-Connection.md) - Database connection architecture
+- [RDS Setup](docs/RDS-Setup.md) - RDS Serverless v2 configuration
 - [WARP.md](WARP.md) - Development commands and tips (not in git)
 
-## Project Status
+## Project Status (2025-08-20)
 
-- ✅ Phase 1: Authentication (In Progress)
+### ✅ Working Features:
+- **Local Development**: Flask app runs successfully with both Docker PostgreSQL and cloud RDS
+- **Cloud Database**: RDS Serverless v2 PostgreSQL deployed, seeded, and tested
+- **Authentication API**: All auth endpoints (register, login, profile) working locally
+- **RDS Proxy**: Configured for Lambda connection pooling
+- **Lambda Deployment**: Successfully deployed to AWS using Serverless Framework v3.40.0
+
+### ⚠️ Known Issues:
+- **Lambda Endpoint Timeout**: Deployed Lambda function times out when accessing API endpoints. This appears to be a network connectivity issue between Lambda and RDS Proxy that needs debugging.
+
+### 📋 Roadmap:
+- ✅ Phase 1A: Local Development with Authentication (Complete)
+- ✅ Phase 1B: Cloud RDS Integration (Complete)
+- 🔧 Phase 1C: Lambda Deployment (In Progress - debugging timeout issue)
 - 📋 Phase 2: Food Catalog (Planned)
 - 📋 Phase 3: Meal Planning (Planned)
 - 📋 Phase 4: Frontend (Future)

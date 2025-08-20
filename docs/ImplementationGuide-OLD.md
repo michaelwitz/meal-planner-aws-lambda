@@ -3,6 +3,26 @@
 ## Overview
 Building a cloud-native meal planner application using AWS Lambda, Serverless Framework, and RDS PostgreSQL. This plan focuses on Phase 1: Infrastructure Setup and Authentication, with support for local development.
 
+## Current Status (2025-08-20)
+
+### ✅ Completed Tasks:
+- **Local Development Environment**: Flask app runs locally and connects to both Docker PostgreSQL and cloud RDS
+- **AWS Infrastructure**: VPC, security groups, RDS Serverless v2, and RDS Proxy are all deployed and configured
+- **Database**: Cloud RDS is seeded with test data and accessible from local environment
+- **Authentication**: All auth endpoints work locally with cloud database
+- **Lambda Deployment**: Flask app successfully deployed to Lambda using Serverless Framework v3.40.0
+- **Environment Configuration**: All environment variables properly configured for both local and Lambda environments
+
+### ⚠️ Current Issues:
+- **Lambda Timeout**: The deployed Lambda function times out when accessing endpoints (e.g., `/api/auth/register`)
+- **Root Cause**: Likely network connectivity issue between Lambda and RDS Proxy, needs investigation
+
+### 🔄 Next Steps:
+1. Debug Lambda-RDS Proxy connectivity using CloudWatch logs
+2. Verify security group rules between Lambda and RDS Proxy
+3. Test and fix the timeout issue
+4. Complete testing of all API endpoints in Lambda environment
+
 ### Architecture Components
 
 ### AWS Infrastructure
@@ -796,9 +816,11 @@ functions:
 ```
 
 #### 5.2 Deploy to AWS
+
+**For Serverless Framework installation and setup, see: [Serverless-Setup.md](./Serverless-Setup.md)**
+
 ```bash
-# Install Serverless Framework
-npm install -g serverless
+# Quick deployment (after Serverless is installed)
 npm install --save-dev serverless-python-requirements serverless-wsgi
 
 # Deploy

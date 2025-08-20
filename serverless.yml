@@ -1,0 +1,137 @@
+service: meal-planner
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11
+  architecture: arm64  # Use Graviton2 ARM processors
+  stage: ${opt:stage, 'test'}
+  region: ${env:AWS_REGION, 'us-east-1'}
+  profile: ${env:AWS_PROFILE, 'serverless-cli-user'}
+  
+  # Lambda function configuration
+  timeout: 30
+  memorySize: 512
+  
+  # VPC Configuration for database access
+  vpc:
+    securityGroupIds:
+      - ${env:LAMBDA_SECURITY_GROUP_ID}
+    subnetIds:
+      - ${env:PRIVATE_SUBNET_1A}
+      - ${env:PRIVATE_SUBNET_1B}
+  
+  # Environment variables for all functions
+  environment:
+    STAGE: ${self:provider.stage}
+    ENVIRONMENT: ${self:provider.stage}
+    # AWS_REGION is automatically set by Lambda runtime, don't override
+    
+    # Database configuration
+    # Lambda uses RDS Proxy endpoint for connection pooling
+    DB_HOST: ${env:RDS_PROXY_ENDPOINT}
+    DB_PORT: ${env:DB_PORT}
+    DB_NAME: ${env:DB_NAME}
+    DB_USER: ${env:DB_USER}
+    DB_PASSWORD: ${env:DB_PASSWORD}
+    
+    # Application configuration
+    FLASK_SECRET_KEY: ${env:FLASK_SECRET_KEY}
+    JWT_SECRET_KEY: ${env:JWT_SECRET_KEY}
+    JWT_ACCESS_TOKEN_EXPIRES: ${env:JWT_ACCESS_TOKEN_EXPIRES}
+    API_PREFIX: ${env:API_PREFIX}
+    
+    # Lambda-specific
+    IS_LAMBDA: true
+    USE_LOCAL_DB: false
+    SQLALCHEMY_ECHO: false
+    LOG_LEVEL: INFO
+    PYTHONPATH: /var/task/backend:/var/task
+
+  # IAM permissions
+  iam:
+    role:
+      statements:
+        # VPC permissions
+        - Effect: Allow
+          Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DetachNetworkInterface
+            - ec2:DeleteNetworkInterface
+          Resource: "*"
+        
+        # RDS permissions (if using Data API in future)
+        - Effect: Allow
+          Action:
+            - rds:DescribeDBClusters
+            - rds:DescribeDBInstances
+          Resource: "*"
+        
+        # CloudWatch Logs
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+
+functions:
+  app:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+          cors: true
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+
+plugins:
+  - serverless-dotenv-plugin  # Must be first to load env vars
+  - serverless-wsgi
+  - serverless-python-requirements
+  - serverless-offline
+
+custom:
+  wsgi:
+    app: app:create_app()  # No backend prefix - app is at root in package
+    packRequirements: false
+  
+  pythonRequirements:
+    # Disabled - we handle dependencies in our build script
+    dockerizePip: false
+    layer: false
+    useStaticCache: false
+    useDownloadCache: false
+  
+  serverless-offline:
+    httpPort: 3000
+    lambdaPort: 3002
+    host: 0.0.0.0
+    noPrependStageInUrl: true
+  
+  dotenv:
+    path: .env
+    include:
+      # AWS_REGION is excluded as it's a reserved Lambda environment variable
+      - RDS_PROXY_ENDPOINT  # Lambda uses proxy for connection pooling
+      - DB_PORT
+      - DB_NAME
+      - DB_USER
+      - DB_PASSWORD
+      - FLASK_SECRET_KEY
+      - JWT_SECRET_KEY
+      - JWT_ACCESS_TOKEN_EXPIRES
+      - API_PREFIX
+      - LAMBDA_SECURITY_GROUP_ID
+      - PRIVATE_SUBNET_1A
+      - PRIVATE_SUBNET_1B
+
+package:
+  individually: false
+  # Use our custom-built package that has /app at root (no /backend)
+  artifact: .serverless/lambda-package.zip
