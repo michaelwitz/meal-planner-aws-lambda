@@ -239,6 +239,94 @@ meal-planner-aws-lambda/
    - Performance optimization
    - Debug procedures
 
+### API Endpoints
+
+#### Authentication
+
+1. **POST /api/auth/register**
+   ```json
+   {
+     "email": "user@example.com",
+     "username": "user123",
+     "password": "Password123",
+     "fullName": "Test User",
+     "sex": "MALE",
+     "addressLine1": "123 Main St",
+     "city": "Test City",
+     "stateProvinceCode": "TC",
+     "countryCode": "US",
+     "postalCode": "12345"
+   }
+   ```
+
+2. **POST /api/auth/login**
+   ```json
+   {
+     "login": "user@example.com",
+     "password": "Password123"
+   }
+   ```
+
+#### User Profile
+
+1. **GET /api/users/me**
+   - Requires JWT auth token
+   - Returns user profile data
+   ```json
+   {
+     "id": 1,
+     "email": "user@example.com",
+     "username": "user123",
+     "fullName": "Test User",
+     "sex": "MALE",
+     "addressLine1": "123 Main St",
+     "city": "Test City",
+     "stateProvinceCode": "TC",
+     "countryCode": "US",
+     "postalCode": "12345",
+     "createdAt": "2024-08-20T20:00:00Z",
+     "updatedAt": "2024-08-20T20:00:00Z"
+   }
+   ```
+
+2. **PUT /api/users/me**
+   - Requires JWT auth token
+   - Updates user profile data
+   - All fields are optional
+   ```json
+   {
+     "fullName": "Updated Name",
+     "addressLine1": "456 New St",
+     "city": "New City",
+     "stateProvinceCode": "NC",
+     "countryCode": "CA",
+     "postalCode": "67890"
+   }
+   ```
+
+### API Response Format
+
+All API responses follow these conventions:
+- All JSON field names use camelCase (e.g., `fullName`, `addressLine1`)
+- Database and internal Python code uses snake_case (e.g., `full_name`, `address_line_1`)
+- Pydantic models handle the conversion between snake_case and camelCase
+
+Example response:
+```json
+{
+  "fullName": "John Doe",
+  "addressLine1": "123 Main St",
+  "stateProvinceCode": "CA",
+  "createdAt": "2024-08-20T20:00:00Z",
+  "updatedAt": "2024-08-20T20:00:00Z"
+}
+```
+
+This convention ensures:
+1. Frontend receives consistent camelCase JSON
+2. Backend maintains Pythonic snake_case
+3. Database schema uses standard snake_case
+
 ### Quick References
 
 - **[Quick Start Guide](../DEPLOYMENT.md)** - Get up and running quickly
