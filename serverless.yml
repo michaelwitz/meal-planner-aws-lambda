@@ -47,7 +47,7 @@ provider:
     USE_LOCAL_DB: false
     SQLALCHEMY_ECHO: false
     LOG_LEVEL: INFO
-    PYTHONPATH: /var/task/backend:/var/task
+    PYTHONPATH: /var/task
 
   # IAM permissions
   iam:
@@ -133,5 +133,9 @@ custom:
 
 package:
   individually: false
-  # Use our custom-built package that has /app at root (no /backend)
-  artifact: .serverless/lambda-package.zip
+  artifact: dist/lambda-package.zip  # Build in dist and use from there
+  patterns:
+    - '!node_modules/**'
+    - '!.git/**'
+    - '!__pycache__/**'
+    - '!*.pyc'

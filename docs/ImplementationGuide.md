@@ -414,6 +414,25 @@ jobs:
    - Input validation with Pydantic
    - SQL injection prevention via ORM
 
+5. **IAM Policies**
+
+   - **`serverless-cli-user`**: The `serverless-cli-user` is an IAM user with broad permissions, intended for use with the Serverless Framework and other administrative scripts. The policy attached to this user is intentionally permissive to allow for the creation and management of all necessary AWS resources.
+
+     **Warning**: This user has extensive permissions and should be used with caution. The credentials for this user should be stored securely and should not be used for any purpose other than deploying and managing the application.
+
+     ```json
+     {
+         "Version": "2012-10-17",
+         "Statement": [
+             {
+                 "Effect": "Allow",
+                 "Action": "*",
+                 "Resource": "*"
+             }
+         ]
+     }
+     ```
+
 ## Monitoring & Observability
 
 ### CloudWatch Configuration
