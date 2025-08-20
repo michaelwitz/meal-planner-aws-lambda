@@ -9,7 +9,6 @@ How pytest works:
 """
 
 import pytest
-import json
 
 
 class TestAuthentication:
@@ -27,14 +26,14 @@ class TestAuthentication:
             'email': 'newuser@test.com',
             'username': 'newuser-123',  # Testing hyphen in username
             'password': 'SecurePass123',
-            'full_name': 'New Test User',
+            'fullName': 'New Test User',
             'sex': 'FEMALE',
-            'phone_number': '555-1234',
-            'address_line_1': '456 New St',
+            'phoneNumber': '555-1234',
+            'addressLine1': '456 New St',
             'city': 'New City',
-            'state_province_code': 'NC',
-            'country_code': 'us',  # Testing lowercase (should be uppercased)
-            'postal_code': '54321'
+            'stateProvinceCode': 'NC',
+            'countryCode': 'us',  # Testing lowercase (should be uppercased)
+            'postalCode': '54321'
         }
         
         # Act: Make the request
@@ -46,15 +45,15 @@ class TestAuthentication:
         assert response.status_code == 201
         
         data = response.get_json()
-        assert 'access_token' in data
-        assert data['token_type'] == 'bearer'
-        assert data['expires_in'] == 86400  # 24 hours as configured
+        assert 'accessToken' in data
+        assert data['tokenType'] == 'bearer'
+        assert data['expiresIn'] == 86400  # 24 hours as configured
         
         # Check user data in response
         assert data['user']['email'] == 'newuser@test.com'
         assert data['user']['username'] == 'newuser-123'
-        assert data['user']['full_name'] == 'New Test User'
-        assert data['user']['country_code'] == 'US'  # Should be uppercased
+        assert data['user']['fullName'] == 'New Test User'
+        assert data['user']['countryCode'] == 'US'  # Should be uppercased
         assert 'password' not in data['user']  # Password should never be returned
         assert 'password_hash' not in data['user']
     
@@ -65,14 +64,14 @@ class TestAuthentication:
             'email': 'existing@test.com',  # This user exists in fixtures
             'username': 'different_username',
             'password': 'Password123',
-            'full_name': 'Another User',
+            'fullName': 'Another User',
             'sex': 'MALE',
-            'phone_number': '555-9999',
-            'address_line_1': '789 Street',
+            'phoneNumber': '555-9999',
+            'addressLine1': '789 Street',
             'city': 'City',
-            'state_province_code': 'ST',
-            'country_code': 'US',
-            'postal_code': '11111'
+            'stateProvinceCode': 'ST',
+            'countryCode': 'US',
+            'postalCode': '11111'
         }
         
         response = client.post('/api/auth/register', json=duplicate_data)
@@ -88,14 +87,14 @@ class TestAuthentication:
             'email': 'different@test.com',
             'username': 'existinguser',  # This username exists in fixtures
             'password': 'Password123',
-            'full_name': 'Another User',
+            'fullName': 'Another User',
             'sex': 'OTHER',
-            'phone_number': '555-8888',
-            'address_line_1': '321 Avenue',
+            'phoneNumber': '555-8888',
+            'addressLine1': '321 Avenue',
             'city': 'Town',
-            'state_province_code': 'TW',
-            'country_code': 'US',
-            'postal_code': '22222'
+            'stateProvinceCode': 'TW',
+            'countryCode': 'US',
+            'postalCode': '22222'
         }
         
         response = client.post('/api/auth/register', json=duplicate_data)
@@ -111,14 +110,14 @@ class TestAuthentication:
             'email': 'test@test.com',
             'username': 'testuser',
             'password': 'weak',  # Too short, no numbers
-            'full_name': 'Test User',
+            'fullName': 'Test User',
             'sex': 'MALE',
-            'phone_number': '555-7777',
-            'address_line_1': '111 Street',
+            'phoneNumber': '555-7777',
+            'addressLine1': '111 Street',
             'city': 'City',
-            'state_province_code': 'ST',
-            'country_code': 'US',
-            'postal_code': '33333'
+            'stateProvinceCode': 'ST',
+            'countryCode': 'US',
+            'postalCode': '33333'
         }
         
         response = client.post('/api/auth/register', json=invalid_data)
@@ -136,7 +135,7 @@ class TestAuthentication:
         
         assert response.status_code == 200
         data = response.get_json()
-        assert 'access_token' in data
+        assert 'accessToken' in data
         assert data['user']['email'] == 'existing@test.com'
         assert data['user']['username'] == 'existinguser'
     
@@ -151,7 +150,7 @@ class TestAuthentication:
         
         assert response.status_code == 200
         data = response.get_json()
-        assert 'access_token' in data
+        assert 'accessToken' in data
         assert data['user']['username'] == 'existinguser'
     
     def test_login_wrong_password_fails(self, client):
@@ -197,7 +196,7 @@ class TestAuthentication:
         assert data['email'] == 'existing@test.com'
         assert data['username'] == 'existinguser'
         assert 'password' not in data
-        assert 'password_hash' not in data
+        assert 'passwordHash' not in data
     
     def test_get_profile_without_token_fails(self, client):
         """Test that profile endpoint requires authentication."""
@@ -247,14 +246,14 @@ class TestAuthentication:
             'email': 'not-an-email',
             'username': 'testuser',
             'password': 'ValidPass123',
-            'full_name': 'Test User',
+            'fullName': 'Test User',
             'sex': 'MALE',
-            'phone_number': '555-1234',
-            'address_line_1': '123 Test St',
+            'phoneNumber': '555-1234',
+            'addressLine1': '123 Test St',
             'city': 'Test City',
-            'state_province_code': 'TC',
-            'country_code': 'US',
-            'postal_code': '12345'
+            'stateProvinceCode': 'TC',
+            'countryCode': 'US',
+            'postalCode': '12345'
         }
         
         response = client.post('/api/auth/register', json=invalid_email_data)
@@ -267,14 +266,14 @@ class TestAuthentication:
             'email': 'test@test.com',
             'username': 'testuser',
             'password': 'ValidPass123',
-            'full_name': 'Test User',
+            'fullName': 'Test User',
             'sex': 'INVALID',  # Not MALE, FEMALE, or OTHER
-            'phone_number': '555-1234',
-            'address_line_1': '123 Test St',
+            'phoneNumber': '555-1234',
+            'addressLine1': '123 Test St',
             'city': 'Test City',
-            'state_province_code': 'TC',
-            'country_code': 'US',
-            'postal_code': '12345'
+            'stateProvinceCode': 'TC',
+            'countryCode': 'US',
+            'postalCode': '12345'
         }
         
         response = client.post('/api/auth/register', json=invalid_sex_data)

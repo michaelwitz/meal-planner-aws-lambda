@@ -97,13 +97,13 @@ def create_app(config_name=None):
     
     # Register blueprints
     from .blueprints.auth.routes import auth_bp
-    
+    from .blueprints.users import bp as users_bp
+
     app.register_blueprint(auth_bp, url_prefix=f"{app.config['API_PREFIX']}/auth")
-    
+    app.register_blueprint(users_bp)
+
     # TODO: Add more blueprints as they are created
-    # from .blueprints.users.routes import users_bp
     # from .blueprints.meals.routes import meals_bp
-    # app.register_blueprint(users_bp, url_prefix=f"{app.config['API_PREFIX']}/users")
     # app.register_blueprint(meals_bp, url_prefix=f"{app.config['API_PREFIX']}/meals")
     
     @app.route('/health')

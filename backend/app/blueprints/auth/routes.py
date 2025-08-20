@@ -33,14 +33,15 @@ def register(body: UserRegisterSchema):
         user, access_token, expires_in = AuthService.register_user_with_token(body)
         
         # Create response
-        user_response = UserResponseSchema.from_orm(user)
+        user_response = UserResponseSchema.model_validate(user)
         token_response = TokenResponseSchema(
-            access_token=access_token,
-            expires_in=expires_in,
+            accessToken=access_token,
+            tokenType="bearer",
+            expiresIn=expires_in,
             user=user_response
         )
         
-        return jsonify(token_response.dict()), 201
+        return jsonify(token_response.model_dump()), 201
         
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
@@ -66,14 +67,15 @@ def login(body: UserLoginSchema):
         user, access_token, expires_in = AuthService.authenticate_user(body)
         
         # Create response
-        user_response = UserResponseSchema.from_orm(user)
+        user_response = UserResponseSchema.model_validate(user)
         token_response = TokenResponseSchema(
-            access_token=access_token,
-            expires_in=expires_in,
+            accessToken=access_token,
+            tokenType="bearer",
+            expiresIn=expires_in,
             user=user_response
         )
         
-        return jsonify(token_response.dict()), 200
+        return jsonify(token_response.model_dump()), 200
         
     except ValueError as e:
         return jsonify({"error": str(e)}), 401
@@ -104,7 +106,7 @@ def get_profile():
         # Create response
         user_response = UserResponseSchema.from_orm(user)
         
-        return jsonify(user_response.dict()), 200
+        return jsonify(user_response.model_dump(by_alias=True)), 200
         
     except ValueError as e:
         return jsonify({"error": str(e)}), 404
