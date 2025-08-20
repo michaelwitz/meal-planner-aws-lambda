@@ -1,21 +1,23 @@
 # Serverless Framework Setup
 
-## Important: Hybrid Deployment Approach
+## Serverless Framework and Deployment
 
-**We use Serverless Framework for infrastructure management only, NOT for packaging the application.** 
+The Serverless Framework is used to define and deploy all the necessary AWS infrastructure for this project, including:
 
-Due to import path issues and packaging complexities, we use:
-- **Serverless Framework**: Manages AWS infrastructure (Lambda config, API Gateway, VPC, security groups)
-- **Custom Docker script**: Packages and deploys the application code (see [Lambda-Deployment.md](./Lambda-Deployment.md))
+*   The Lambda function itself
+*   API Gateway endpoints
+*   VPC, subnets, and security groups
+*   IAM roles and permissions
+*   Environment variables
 
-### Why This Approach?
+### The Deployment Process
 
-1. **Serverless packaging issues**: Created nested structures breaking Python imports (`backend.app` vs `app`)
-2. **Layer complexity**: Automatic layer creation was inconsistent
-3. **Docker requirements**: serverless-python-requirements plugin requires Docker anyway
-4. **Path conflicts**: Required complex PYTHONPATH manipulations
+While the Serverless Framework defines the infrastructure, the deployment process is a two-step process that uses a custom build script in conjunction with the Serverless Framework.
 
-Our solution gives us the best of both worlds: infrastructure as code with Serverless, reliable packaging with Docker.
+1.  **Build the Deployment Package**: The `build-package.sh` script is used to create the deployment artifact. This script correctly packages the Flask application and its dependencies into a zip file that is ready for deployment.
+2.  **Deploy with Serverless**: The `serverless deploy` command is used to deploy the package created by the build script. The `serverless.yml` file is configured to use the artifact created by the `build-package.sh` script, so the `serverless deploy` command will automatically deploy the correct package.
+
+This hybrid approach gives us the best of both worlds: the power of the Serverless Framework for infrastructure management, and the flexibility of a custom build script for packaging our application.
 
 ## Why Serverless Framework v3.40.0?
 
@@ -94,38 +96,14 @@ export AWS_PROFILE=serverless-cli-user
 
 ## Deployment Commands
 
-### Infrastructure Deployment (Serverless Framework)
+### Deployment
 
 ```bash
-# Deploy infrastructure only (first time setup)
-serverless deploy --stage test --verbose
+# Build the deployment package
+./build-package.sh
 
-# This creates:
-# - Lambda function configuration
-# - API Gateway
-# - VPC and security groups
-# - Environment variables
-# - IAM roles
-
-# View logs
-serverless logs -f app --stage test --tail
-
-# Remove deployment
-serverless remove --stage test
-```
-
-### Application Code Deployment (Custom Script)
-
-```bash
-# Deploy application code
-cd backend/scripts/deployment
-./deploy-lambda.sh
-
-# This handles:
-# - Building Lambda-compatible package with Docker
-# - Correct Python import paths
-# - Dependency installation
-# - ZIP creation and upload
+# Deploy the package
+set -a; source .env; set +a; AWS_PROFILE=serverless-cli-user npx serverless deploy --stage test
 ```
 
 **Note**: Always use `test` or `production` as stage names, not `dev`.

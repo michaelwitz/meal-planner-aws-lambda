@@ -205,6 +205,12 @@ python/
 .build/
 .lambda-docker/
 
+# Build directories
+/dist/
+
+# Serverless Framework deployment packages
+/lambda-package.zip  # Root-level deployment package
+
 # Temporary test scripts (but not deployment scripts)
 /build-*.sh
 /deploy-backend.sh
@@ -251,3 +257,4 @@ scratch/
 temp_scripts/
 *.backup
 backup/
+ARCHIVE/

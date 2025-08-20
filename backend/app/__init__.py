@@ -121,7 +121,8 @@ def create_app(config_name=None):
             'timestamp': datetime.utcnow().isoformat(),
             'environment': os.getenv('ENVIRONMENT', 'unknown'),
             'is_local': os.getenv('IS_LOCAL', 'not set'),
-            'python_version': os.sys.version
+            'python_version': os.sys.version,
+            'code_changed': '2025-08-20T19:39:37Z'
         })
     
     @app.route('/test-db')
