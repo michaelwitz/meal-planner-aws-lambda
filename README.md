@@ -156,7 +156,6 @@ This allows you to:
 - [Serverless Setup](docs/Serverless-Setup.md) - Serverless Framework v3 installation and configuration
 - [Lambda-RDS Connection](docs/Lambda-RDS-Connection.md) - Database connection architecture
 - [RDS Setup](docs/RDS-Setup.md) - RDS Serverless v2 configuration
-- [WARP.md](WARP.md) - Development commands and tips (not in git)
 
 ## Deployment
 
