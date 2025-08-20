@@ -1,0 +1,7 @@
+{
+  "api_gateway_url": "https://your-api-id.execute-api.us-east-1.amazonaws.com",
+  "stage": "test",
+  "aws_region": "us-east-1",
+  "timeout_seconds": 30,
+  "seed_data_file": "../../scripts/seed-data.json"
+}

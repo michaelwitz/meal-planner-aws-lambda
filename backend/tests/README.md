@@ -5,10 +5,19 @@ This directory contains all unit and integration tests for the Meal Planner API.
 Tests are run against a local Docker PostgreSQL database.
 
 ## Test Structure
-- `conftest.py` - Pytest fixtures and test configuration
-- `db_config.py` - Database configuration for local testing
-- `run_tests.py` - Convenient test runner script
-- `test_auth.py` - Authentication endpoint tests
+
+```
+tests/
+├── unit/                    # Unit tests (coming soon)
+├── integration/             # Integration tests (coming soon)
+├── api/                     # Lambda API tests
+│   ├── test_lambda_api.py  # Comprehensive API test suite
+│   ├── config.json          # Your API configuration (gitignored)
+│   └── config.example.json  # Example configuration
+├── conftest.py              # Pytest fixtures and test configuration
+├── db_config.py             # Database configuration for local testing
+├── run_tests.py             # Convenient test runner script
+└── test_auth.py             # Local authentication endpoint tests
 
 ## Database Configuration
 
@@ -152,6 +161,58 @@ docker-compose -f docker-compose.test.yml down
 - Invalid/missing token handling
 - Logout functionality
 
+## Lambda API Tests
+
+### Overview
+The `api/` directory contains tests that run against the deployed Lambda function via API Gateway.
+
+### Configuration
+1. Copy the example config:
+   ```bash
+   cd tests/api
+   cp config.example.json config.json
+   ```
+
+2. Update with your API Gateway URL:
+   ```json
+   {
+     "api_gateway_url": "https://your-api-id.execute-api.us-east-1.amazonaws.com",
+     "stage": "test",
+     "aws_region": "us-east-1",
+     "timeout_seconds": 30,
+     "seed_data_file": "../../scripts/seed-data.json"
+   }
+   ```
+
+### Running Lambda API Tests
+```bash
+cd backend/tests/api
+
+# Run all tests
+python test_lambda_api.py
+
+# Run specific test category
+python test_lambda_api.py --test health
+python test_lambda_api.py --test login --user admin
+
+# Use different config
+python test_lambda_api.py --config prod.json
+```
+
+### Test Coverage
+- ✅ Infrastructure (health, system info, database)
+- ✅ Authentication (login, logout, register)
+- ✅ Protected endpoints (profile, refresh token)
+- ✅ Validation (missing fields, invalid data)
+- ✅ Error cases (duplicates, unauthorized)
+
+### Seed Data
+API tests use the same seed data as the database:
+- Location: `/backend/scripts/seed-data.json`
+- Admin: admin@mealplanner.com / admin123
+- User 1: john.doe@example.com / password123
+- User 2: jane.smith@example.com / password123
+
 ## TODO
 - [ ] Add tests for password reset endpoints (when implemented)
 - [ ] Add tests for token refresh endpoints (when implemented)
@@ -159,3 +220,4 @@ docker-compose -f docker-compose.test.yml down
 - [ ] Add tests for food catalog endpoints
 - [ ] Add tests for meal planning endpoints
 - [ ] Add tests for user favorites endpoints
+- [ ] Integrate Lambda API tests into CI/CD pipeline

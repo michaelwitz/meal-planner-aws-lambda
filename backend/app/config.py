@@ -1,18 +1,49 @@
 """Flask application configuration."""
 
 import os
+import logging
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables from .env file in project root
-project_root = Path(__file__).parent.parent.parent  # Go up from app/ to backend/ to project root/
-env_path = project_root / '.env'
+# Configure logging
+log_level = logging.INFO
+if os.getenv('DEBUG', '').lower() == 'true':
+    log_level = logging.DEBUG
 
-# Check if .env exists - fail fast if not
-if not env_path.exists():
-    raise FileNotFoundError(f".env file not found at {env_path}. Please create it from .env.example")
+logging.basicConfig(
+    level=log_level,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-load_dotenv(env_path)
+# Detect if we're running in AWS Lambda
+is_lambda = 'AWS_LAMBDA_FUNCTION_NAME' in os.environ
+logger.info(f"Running in Lambda: {is_lambda}")
+if is_lambda:
+    logger.info(f"Lambda function name: {os.getenv('AWS_LAMBDA_FUNCTION_NAME')}")
+
+if not is_lambda:
+    # Running locally - need to load .env file
+    try:
+        project_root = Path(__file__).parent.parent.parent
+        env_path = project_root / '.env'
+        logger.info(f"Looking for .env file at: {env_path}")
+        
+        if not env_path.exists():
+            raise FileNotFoundError(f"Missing {env_path}")
+        
+        load_dotenv(env_path)
+        logger.info(".env file loaded successfully")
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            "\n\nEnvironment configuration error:\n"
+            "  - Not running in AWS Lambda (AWS_LAMBDA_FUNCTION_NAME not set)\n"
+            "  - .env file not found in project root\n\n"
+            "To fix this:\n"
+            "  1. Copy .env.example to .env\n"
+            "  2. Fill in your configuration values\n"
+            "  3. Ensure you're running from the project root\n"
+        )
 
 
 class Config:
@@ -41,73 +72,132 @@ class Config:
     SQLALCHEMY_ECHO = os.getenv('SQLALCHEMY_ECHO', 'false').lower() == 'true'
 
 
-class DevelopmentLocalConfig(Config):
-    """Development with local Docker PostgreSQL."""
-    DEBUG = True
-    TESTING = False
+# Lambda configurations - Use RDS Proxy (DB_HOST is set to RDS_PROXY_ENDPOINT in serverless.yml)
+if is_lambda:
+    class ProductionConfig(Config):
+        """Production configuration - Lambda environment via RDS Proxy."""
+        DEBUG = False
+        TESTING = False
+        
+        # Lambda connects to RDS via RDS Proxy endpoint
+        # DB_HOST is set to RDS_PROXY_ENDPOINT in serverless.yml
+        db_user = os.getenv('DB_USER')
+        db_pass = os.getenv('DB_PASSWORD')
+        db_host = os.getenv('DB_HOST')  # This is RDS_PROXY_ENDPOINT from serverless.yml
+        db_port = os.getenv('DB_PORT', '5432')
+        db_name = os.getenv('DB_NAME')
+        
+        logger.info(f"Lambda DB Config:")
+        logger.info(f"  Host: {db_host[:30] if db_host else 'NOT SET'}...")
+        logger.info(f"  Database: {db_name if db_name else 'NOT SET'}")
+        logger.info(f"  User: {db_user if db_user else 'NOT SET'}")
+        logger.info(f"  Port: {db_port}")
+        
+        if not all([db_user, db_pass, db_host, db_name]):
+            missing = []
+            if not db_user: missing.append('DB_USER')
+            if not db_pass: missing.append('DB_PASSWORD') 
+            if not db_host: missing.append('DB_HOST')
+            if not db_name: missing.append('DB_NAME')
+            logger.error(f"Missing required environment variables: {missing}")
+            raise ValueError(
+                f"Missing required DB environment variables in Lambda: {missing}. "
+                "Check serverless.yml environment configuration."
+            )
+        
+        # PostgreSQL connection URI via RDS Proxy
+        SQLALCHEMY_DATABASE_URI = f'postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
+        logger.info(f"Lambda database URI configured successfully")
     
-    # Build PostgreSQL URI for local database
-    db_user = os.getenv('LOCAL_DB_USER')
-    db_pass = os.getenv('LOCAL_DB_PASSWORD')
-    db_host = os.getenv('LOCAL_DB_HOST')
-    db_port = os.getenv('LOCAL_DB_PORT')
-    db_name = os.getenv('LOCAL_DB_NAME')
+    # Testing is just production with debug enabled (both use RDS Proxy)
+    class TestingConfig(ProductionConfig):
+        """Testing configuration - Lambda test stage via RDS Proxy."""
+        DEBUG = True
+        TESTING = True
     
-    if not all([db_user, db_pass, db_host, db_port, db_name]):
-        raise ValueError("Missing required LOCAL_DB_* environment variables. Check your .env file.")
+    # Create placeholder classes for local configs (never used in Lambda)
+    class DevelopmentLocalConfig(Config):
+        pass
     
-    # Standard PostgreSQL connection URI
-    SQLALCHEMY_DATABASE_URI = f'postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
+    class DevelopmentCloudConfig(Config):
+        pass
+
+# Local development configurations - Direct connections (no RDS Proxy)
+else:
+    class DevelopmentLocalConfig(Config):
+        """Development with local Docker PostgreSQL."""
+        DEBUG = True
+        TESTING = False
+        
+        # Build PostgreSQL URI for local database
+        db_user = os.getenv('LOCAL_DB_USER')
+        db_pass = os.getenv('LOCAL_DB_PASSWORD')
+        db_host = os.getenv('LOCAL_DB_HOST')
+        db_port = os.getenv('LOCAL_DB_PORT')
+        db_name = os.getenv('LOCAL_DB_NAME')
+        
+        if not all([db_user, db_pass, db_host, db_port, db_name]):
+            raise ValueError("Missing required LOCAL_DB_* environment variables. Check your .env file.")
+        
+        # Standard PostgreSQL connection URI
+        SQLALCHEMY_DATABASE_URI = f'postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
+    
+    class DevelopmentCloudConfig(Config):
+        """Development with cloud RDS Serverless v2 (direct connection, no proxy)."""
+        DEBUG = True
+        TESTING = False
+        
+        # Direct connection to RDS cluster endpoint (not proxy)
+        db_user = os.getenv('DB_USER')
+        db_pass = os.getenv('DB_PASSWORD')
+        db_host = os.getenv('DB_HOST')  # RDS cluster endpoint (direct)
+        db_port = os.getenv('DB_PORT', '5432')
+        db_name = os.getenv('DB_NAME')
+        
+        if not all([db_user, db_pass, db_host, db_name]):
+            raise ValueError("Missing required DB_* environment variables for cloud database. Check your .env file.")
+        
+        # Standard PostgreSQL connection URI - direct to RDS cluster
+        SQLALCHEMY_DATABASE_URI = f'postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
+    
+    # Create placeholder classes for Lambda configs (never used locally)
+    class ProductionConfig(Config):
+        pass
+    
+    class TestingConfig(Config):
+        pass
 
 
-class DevelopmentCloudConfig(Config):
-    """Development with cloud RDS Serverless v2 (direct connection via URI)."""
-    DEBUG = True
-    TESTING = False
+def get_config(config_name=None):
+    """Get configuration class based on environment.
     
-    # Build PostgreSQL URI for RDS Serverless v2
-    # NOTE: We use standard PostgreSQL connection, NOT Data API
-    db_user = os.getenv('DB_USER')
-    db_pass = os.getenv('DB_PASSWORD')
-    db_host = os.getenv('DB_HOST')  # RDS cluster endpoint
-    db_port = os.getenv('DB_PORT', '5432')
-    db_name = os.getenv('DB_NAME')
+    This function lazily loads only the configuration class that's needed,
+    avoiding errors from missing environment variables in unused configs.
+    """
+    if config_name is None:
+        # Determine config based on environment
+        if is_lambda:
+            config_name = 'production'
+        else:
+            # Check USE_LOCAL_DB to determine local vs cloud
+            use_local = os.getenv('USE_LOCAL_DB', 'true').lower() == 'true'
+            config_name = 'development-local' if use_local else 'development-cloud'
     
-    if not all([db_user, db_pass, db_host, db_name]):
-        raise ValueError("Missing required DB_* environment variables for cloud database. Check your .env file.")
-    
-    # Standard PostgreSQL connection URI - works with RDS Serverless v2
-    SQLALCHEMY_DATABASE_URI = f'postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
-
-
-class TestingConfig(Config):
-    """Testing configuration - uses cloud database."""
-    DEBUG = True
-    TESTING = True
-    
-    # Testing uses cloud RDS with standard PostgreSQL connection
-    db_user = os.getenv('DB_USER')
-    db_pass = os.getenv('DB_PASSWORD')
-    db_host = os.getenv('DB_HOST')
-    db_port = os.getenv('DB_PORT', '5432')
-    db_name = os.getenv('TEST_DB_NAME', os.getenv('DB_NAME'))  # Can use separate test DB
-    
-    if not all([db_user, db_pass, db_host, db_name]):
-        raise ValueError("Missing required DB_* environment variables for test database. Check your .env file.")
-    
-    SQLALCHEMY_DATABASE_URI = f'postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
-
-
-class ProductionConfig(Config):
-    """Production configuration - Lambda environment."""
-    DEBUG = False
-    TESTING = False
-    
-    # In Lambda, database connection is handled differently
-    # The database.py module will handle this via RDS Proxy
-    # This is just a placeholder
-    SQLALCHEMY_DATABASE_URI = 'will-be-set-by-lambda'
-
+    # Only evaluate the config class we need
+    if config_name == 'production':
+        # Lambda environment - skip local config classes
+        return ProductionConfig
+    elif config_name == 'development-local':
+        # Local development - skip Lambda config
+        return DevelopmentLocalConfig
+    elif config_name == 'development-cloud':
+        # Cloud development - skip local config
+        return DevelopmentCloudConfig
+    elif config_name == 'testing':
+        return TestingConfig
+    else:
+        # Default to local development
+        return DevelopmentLocalConfig
 
 # Configuration dictionary
 config = {
@@ -115,5 +205,5 @@ config = {
     'development-cloud': DevelopmentCloudConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
-    'default': DevelopmentLocalConfig  # Default to local development
+    'default': DevelopmentLocalConfig
 }

@@ -61,6 +61,9 @@ test-results/
 .dmypy.json
 dmypy.json
 
+# Test configuration (contains API URLs)
+backend/tests/api/config.json
+
 # IDEs and editors
 .vscode/
 .idea/
@@ -78,6 +81,7 @@ dmypy.json
 # Serverless Framework
 .serverless/
 .serverless_plugins/
+.serverless-wsgi
 .webpack/
 node_modules/
 package-lock.json
@@ -192,10 +196,24 @@ secrets.json
 secret.yaml
 secret.yml
 
-# Lambda packages
+# Lambda packages and build artifacts
 lambda-package/
 lambda-layer/
+lambda-package.zip
+lambda-deployment.zip
 python/
+.build/
+.lambda-docker/
+
+# Temporary test scripts (but not deployment scripts)
+/build-*.sh
+/deploy-backend.sh
+/update-*.sh
+/test-local.py
+/test-event.json
+/wsgi_handler.py
+/serverless_wsgi.py
+/docker-build-test.sh
 
 # MacOS
 *.DS_Store

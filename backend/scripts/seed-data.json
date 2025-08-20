@@ -1,0 +1,61 @@
+{
+  "users": [
+    {
+      "email": "admin@mealplanner.com",
+      "username": "admin",
+      "password": "admin123",
+      "full_name": "Admin User",
+      "sex": "OTHER",
+      "phone_number": "555-0100",
+      "address_line_1": "123 Admin St",
+      "city": "San Francisco",
+      "state_province_code": "CA",
+      "country_code": "US",
+      "postal_code": "94102"
+    },
+    {
+      "email": "john.doe@example.com",
+      "username": "johndoe",
+      "password": "password123",
+      "full_name": "John Doe",
+      "sex": "MALE",
+      "phone_number": "555-0101",
+      "address_line_1": "456 Oak Ave",
+      "address_line_2": "Apt 2B",
+      "city": "New York",
+      "state_province_code": "NY",
+      "country_code": "US",
+      "postal_code": "10001"
+    },
+    {
+      "email": "jane.smith@example.com",
+      "username": "janesmith",
+      "password": "password123",
+      "full_name": "Jane Smith",
+      "sex": "FEMALE",
+      "phone_number": "555-0102",
+      "address_line_1": "789 Pine Rd",
+      "city": "Austin",
+      "state_province_code": "TX",
+      "country_code": "US",
+      "postal_code": "78701"
+    }
+  ],
+  "test_credentials": {
+    "admin": {
+      "email": "admin@mealplanner.com",
+      "password": "admin123",
+      "description": "Admin user with full privileges"
+    },
+    "user1": {
+      "email": "john.doe@example.com",
+      "password": "password123",
+      "description": "Standard user (John Doe)"
+    },
+    "user2": {
+      "email": "jane.smith@example.com",
+      "password": "password123",
+      "description": "Standard user (Jane Smith)"
+    }
+  }
+}
