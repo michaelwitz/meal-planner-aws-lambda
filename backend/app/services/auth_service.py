@@ -48,15 +48,15 @@ class AuthService:
             email=user_data.email,
             username=user_data.username,
             password_hash=password_hash,
-            full_name=user_data.full_name,
+            fullName=user_data.fullName,
             sex=user_data.sex.value,
-            phone_number=user_data.phone_number,
-            address_line_1=user_data.address_line_1,
-            address_line_2=user_data.address_line_2,
+            phoneNumber=user_data.phoneNumber,
+            addressLine1=user_data.addressLine1,
+            addressLine2=user_data.addressLine2,
             city=user_data.city,
-            state_province_code=user_data.state_province_code,
-            country_code=user_data.country_code,
-            postal_code=user_data.postal_code
+            stateProvinceCode=user_data.stateProvinceCode,
+            countryCode=user_data.countryCode,
+            postalCode=user_data.postalCode
         )
         
         try:
@@ -89,6 +89,16 @@ class AuthService:
         
         return user, access_token, expires_in
     
+    @staticmethod
+    def hash_password(password: str) -> str:
+        """Hash a password using bcrypt."""
+        return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    @staticmethod
+    def verify_password(user: User, password: str) -> bool:
+        """Verify a password against the stored hash."""
+        return bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8'))
+
     @staticmethod
     def authenticate_user(login_data: UserLoginSchema) -> tuple[User, str, int]:
         """

@@ -23,26 +23,27 @@ if is_lambda:
     logger.info(f"Lambda function name: {os.getenv('AWS_LAMBDA_FUNCTION_NAME')}")
 
 if not is_lambda:
-    # Running locally - need to load .env file
-    try:
-        project_root = Path(__file__).parent.parent.parent
-        env_path = project_root / '.env'
-        logger.info(f"Looking for .env file at: {env_path}")
-        
-        if not env_path.exists():
-            raise FileNotFoundError(f"Missing {env_path}")
-        
+    # Running locally - try .env.dev first, fall back to .env
+    project_root = Path(__file__).parent.parent.parent
+    env_dev_path = project_root / '.env.dev'
+    env_path = project_root / '.env'
+    
+    if env_dev_path.exists():
+        load_dotenv(env_dev_path)
+        logger.info(".env.dev file loaded for local development")
+    elif env_path.exists():
         load_dotenv(env_path)
-        logger.info(".env file loaded successfully")
-    except FileNotFoundError:
+        logger.info(".env file loaded (no .env.dev found)")
+    else:
         raise FileNotFoundError(
             "\n\nEnvironment configuration error:\n"
             "  - Not running in AWS Lambda (AWS_LAMBDA_FUNCTION_NAME not set)\n"
-            "  - .env file not found in project root\n\n"
+            "  - Neither .env.dev nor .env found in project root\n\n"
             "To fix this:\n"
-            "  1. Copy .env.example to .env\n"
-            "  2. Fill in your configuration values\n"
+            "  1. Copy .env.example to .env.dev\n"
+            "  2. Fill in your development configuration values\n"
             "  3. Ensure you're running from the project root\n"
+            "\nNote: Use .env.dev for development, .env is only for Lambda deployments\n"
         )
 
 
@@ -165,7 +166,30 @@ else:
         pass
     
     class TestingConfig(Config):
-        pass
+        """Testing configuration that works in both Lambda and local environments."""
+        DEBUG = True
+        TESTING = True
+        
+        # Build PostgreSQL URI for test database
+        db_user = os.getenv('DB_USER')
+        db_pass = os.getenv('DB_PASSWORD')
+        db_host = os.getenv('DB_HOST')
+        db_port = os.getenv('DB_PORT', '5432')
+        db_name = os.getenv('DB_NAME')
+        
+        if not all([db_user, db_pass, db_host, db_name]):
+            raise ValueError("Missing required DB_* environment variables for testing. Check your test configuration.")
+        
+        # In Lambda, we need to get the database connection details from the Lambda environment
+        # In local dev, we get them from the test environment variables in conftest.py
+        SQLALCHEMY_DATABASE_URI = f'postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
+        
+        # Log test database configuration
+        logger.info(f"Test DB Config (in {'Lambda' if is_lambda else 'Local'} mode):")
+        logger.info(f"  Host: {db_host}")
+        logger.info(f"  Database: {db_name}")
+        logger.info(f"  User: {db_user}")
+        logger.info(f"  Port: {db_port}")
 
 
 def get_config(config_name=None):

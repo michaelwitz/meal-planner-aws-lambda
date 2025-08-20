@@ -12,6 +12,7 @@ Using run_tests.py (recommended):
 - python run_tests.py
 """
 
+import os
 import pytest
 import bcrypt
 
@@ -30,9 +31,16 @@ def app():
     from app.models.database import db
     from app.models.entities import User
     
-    # Create app with test config
-    # The TestingConfig will use TEST_DATABASE_URL which was set by run_tests.py
-    app = create_app('testing')
+    # Ensure we're using local database for tests
+    os.environ['USE_LOCAL_DB'] = 'true'
+    os.environ['LOCAL_DB_USER'] = 'meal_admin'
+    os.environ['LOCAL_DB_PASSWORD'] = 'MealPlan2024!'
+    os.environ['LOCAL_DB_HOST'] = 'localhost'
+    os.environ['LOCAL_DB_PORT'] = '5455'
+    os.environ['LOCAL_DB_NAME'] = 'meal_planner_db'
+    
+    # Create app with local development config
+    app = create_app('development-local')
     
     # Create tables in test database
     with app.app_context():
@@ -43,14 +51,14 @@ def app():
             email='existing@test.com',
             username='existinguser',
             password_hash=bcrypt.hashpw(b'password123', bcrypt.gensalt()).decode('utf-8'),
-            full_name='Existing User',
+            fullName='Existing User',
             sex='MALE',
-            phone_number='555-0001',
-            address_line_1='123 Test St',
+            phoneNumber='555-0001',
+            addressLine1='123 Test St',
             city='Test City',
-            state_province_code='TC',
-            country_code='US',
-            postal_code='12345'
+            stateProvinceCode='TC',
+            countryCode='US',
+            postalCode='12345'
         )
         db.session.add(existing_user)
         db.session.commit()
@@ -98,7 +106,7 @@ def auth_headers(client):
     )
     
     data = response.get_json()
-    token = data['access_token']
+    token = data['accessToken']
     
     return {
         'Authorization': f'Bearer {token}',
